@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Operations — CEO Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e0e;
+    --bg2: #161616;
+    --bg3: #1e1e1e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0ede8;
+    --muted: #6b6b6b;
+    --subtle: #3a3a3a;
+    --green: #3ddc84;
+    --green-dim: rgba(61,220,132,0.12);
+    --blue: #5b9cf6;
+    --blue-dim: rgba(91,156,246,0.1);
+    --red: #f26b6b;
+    --red-dim: rgba(242,107,107,0.1);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.1);
+    --accent: #3ddc84;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 2rem 2.5rem 3rem;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .header-left {}
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .title {
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .title span { font-weight: 500; }
+  .header-right { text-align: right; }
+  .date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .status-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--green);
+  }
+  .status-dot::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    margin-top: 2rem;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 0.5rem;
+  }
+  .metric {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .metric:hover { border-color: var(--border2); }
+  .metric-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .metric-value {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+  .metric-value.green { color: var(--green); }
+  .metric-value.blue { color: var(--blue); }
+  .metric-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .metric-accent {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: transparent;
+  }
+  .metric.highlight .metric-accent { background: var(--green); }
+  .metric.highlight-blue .metric-accent { background: var(--blue); }
+
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 1.75rem 0;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 14px;
+  }
+
+  .log-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .log-item:last-child { border-bottom: none; }
+  .log-firm { font-size: 13px; color: var(--text); }
+  .log-date { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+  .log-amount { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: var(--green); }
+  .log-empty { font-size: 12px; color: var(--subtle); font-style: italic; padding: 8px 0; }
+
+  .challenge-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .prog-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .prog-value { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+  .progress-bar {
+    height: 3px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 5px;
+  }
+  .progress-fill { height: 100%; border-radius: 2px; }
+  .prog-sub { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  .summary-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 0.5rem;
+  }
+  .summary-pill {
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .summary-pill span { color: var(--text); }
+
+  .footer {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--subtle);
+  }
+  .footer-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--subtle);
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="eyebrow">Prop Firm Portfolio</div>
+    <div class="title">Trading <span>Operations</span></div>
+  </div>
+  <div class="header-right">
+    <div class="date" id="today-date"></div>
+    <div class="status-dot">Systems active</div>
+  </div>
+</div>
+
+<div class="section-label">Capital Overview</div>
+<div class="metric-grid">
+  <div class="metric highlight-blue">
+    <div class="metric-label">Total Allocation</div>
+    <div class="metric-value blue">$200,000</div>
+    <div class="metric-sub">Across 2 funded accounts</div>
+    <div class="metric-accent"></div>
+  </div>
+  <div class="metric highlight">
+    <div class="metric-label">Net Profit (All-time)</div>
+    <div class="metric-value green">$4,200</div>
+    <div class="metric-sub">+2.1% on allocation</div>
+    <div class="metric-accent"></div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Total Spent on Challenges</div>
+    <div class="metric-value">$1,580</div>
+    <div class="metric-sub">4 challenges total</div>
+    <div class="metric-accent"></div>
+  </div>
+  <div class="metric highlight">
+    <div class="metric-label">Total Payouts Received</div>
+    <div class="metric-value green">$1,890</div>
+    <div class="metric-sub">2 payouts</div>
+    <div class="metric-accent"></div>
+  </div>
+  <div class="metric highlight">
+    <div class="metric-label">Net ROI (Business)</div>
+    <div class="metric-value green">+19.6%</div>
+    <div class="metric-sub">Payouts vs. challenge cost</div>
+    <div class="metric-accent"></div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Active Challenges</div>
+    <div class="metric-value">1</div>
+    <div class="metric-sub">1 pending evaluation</div>
+    <div class="metric-accent"></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="two-col">
+  <div>
+    <div class="section-label" style="margin-top:0;">Active Challenge — Apex Trader $50k</div>
+    <div class="card">
+      <div class="challenge-grid">
+        <div>
+          <div class="prog-label">Profit Target</div>
+          <div class="prog-value">$2,200 / $5,000</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:44%; background:var(--green);"></div>
+          </div>
+          <div class="prog-sub">44% complete</div>
+        </div>
+        <div>
+          <div class="prog-label">Drawdown Used</div>
+          <div class="prog-value">$1,800 / $5,000</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:36%; background:var(--red);"></div>
+          </div>
+          <div class="prog-sub">36% — safe zone</div>
+        </div>
+      </div>
+      <div class="summary-row" style="margin-top:1rem;">
+        <div class="summary-pill">Cost <span>$242</span></div>
+        <div class="summary-pill">Split <span>90%</span></div>
+        <div class="summary-pill">Status <span style="color:var(--amber);">In Challenge</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label" style="margin-top:0;">Payout Log</div>
+    <div class="card">
+      <div class="log-item">
+        <div>
+          <div class="log-firm">FTMO — May payout</div>
+          <div class="log-date">May 1, 2026</div>
+        </div>
+        <div class="log-amount">+$1,200</div>
+      </div>
+      <div class="log-item">
+        <div>
+          <div class="log-firm">Funded Trader — Apr payout</div>
+          <div class="log-date">Apr 15, 2026</div>
+        </div>
+        <div class="log-amount">+$690</div>
+      </div>
+      <div class="log-item">
+        <div class="log-empty">No earlier payouts recorded</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-note">Last updated: <span id="footer-date"></span></div>
+  <div class="footer-tag">CEO VIEW — CONFIDENTIAL</div>
+</div>
+
+<script>
+  const now = new Date();
+  const opts = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+  document.getElementById('today-date').textContent = now.toLocaleDateString('en-US', opts);
+  document.getElementById('footer-date').textContent = now.toLocaleDateString('en-US', opts);
+</script>
+
+</body>
+</html>
